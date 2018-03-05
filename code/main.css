@@ -1,0 +1,46 @@
+body{
+    font-family: 'open sans';
+    margin: 0;
+}
+
+h1, th {
+	font-family: Georgia, "Times New Roman", Times, serif;
+}
+
+h1 {
+	font-size: 28px;
+}
+
+*{
+   color: #444444;
+}
+table {
+	border-collapse: collapse;
+}
+
+th, td {
+	padding: 10px;
+	border: 2px #666 solid;
+	text-align: center;
+	font-size: 24px;
+}
+
+#free {
+	background-color: #F66;
+}
+
+
+.main-container{
+   padding: 20px;
+}
+.block{
+   display: flex;
+   align-items: right;
+}
+.bet-input{
+   padding: 15px;
+   border-radius: 10px;
+   border: 1px solid lightgrey;
+   font-size: 15pt;
+   margin: 0 10px;
+}
