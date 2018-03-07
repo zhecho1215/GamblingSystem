@@ -2,13 +2,16 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import Web3 from 'web3'
 import './main.css'
+import $ from 'jquery';
+
 class App extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
             lastNumber: 0,
-            numberOfCards: 0,
+            allCardsCount: 0,
             totalBet: 0,
+            cardsCountForUser: 0,
             usedNums: [],
         }
         if (typeof this.state === "undefined") {
@@ -80,11 +83,7 @@ class App extends React.Component {
                 "name": "playerInfo",
                 "outputs": [
                     {
-                        "name": "amountBet",
-                        "type": "uint256"
-                    },
-                    {
-                        "name": "numberSelected",
+                        "name": "cardsCount",
                         "type": "uint256"
                     }
                 ],
@@ -95,7 +94,7 @@ class App extends React.Component {
             {
                 "constant": true,
                 "inputs": [],
-                "name": "numberOfCards",
+                "name": "allCardsCount",
                 "outputs": [
                     {
                         "name": "",
@@ -106,20 +105,14 @@ class App extends React.Component {
                 "stateMutability": "view",
                 "type": "function"
             },
-           
             {
                 "constant": true,
-                "inputs": [
-                    {
-                        "name": "player",
-                        "type": "address"
-                    }
-                ],
-                "name": "checkPlayerExists",
+                "inputs": [],
+                "name": "cardWinner",
                 "outputs": [
                     {
                         "name": "",
-                        "type": "bool"
+                        "type": "uint256"
                     }
                 ],
                 "payable": false,
@@ -140,44 +133,58 @@ class App extends React.Component {
                 "stateMutability": "view",
                 "type": "function"
             },
-            
+            {
+                "constant": true,
+                "inputs": [
+                    {
+                        "name": "player",
+                        "type": "address"
+                    }
+                ],
+                "name": "checkPlayerExists",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "constant": false,
+                "inputs": [],
+                "name": "buy",
+                "outputs": [],
+                "payable": true,
+                "stateMutability": "payable",
+                "type": "function"
+            },
             {
                 "constant": false,
                 "inputs": [
                     {
-                        "name": "numberSelected",
+                        "name": "winnerID",
                         "type": "uint256"
                     }
                 ],
-                "name": "bet",
+                "name": "payPrize",
                 "outputs": [],
-                "payable": true,
-                "stateMutability": "payable",
+                "payable": false,
+                "stateMutability": "nonpayable",
                 "type": "function"
             },
             {
                 "payable": true,
                 "stateMutability": "payable",
                 "type": "fallback"
-            },
-            {
-                "constant": false,
-                "inputs": [],
-                "name": "distributePrizes",
-                "outputs": [],
-                "payable": false,
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            
-            {
-                "constant": false,
-                "inputs": [],
-                "name": "generateNumberWinner",
-                "outputs": [],
-                "payable": false,
-                "stateMutability": "nonpayable",
-                "type": "function"
             },
             {
                 "constant": false,
@@ -189,25 +196,21 @@ class App extends React.Component {
                 "type": "function"
             }
         ])
-        this.state.ContractInstance = MyContract.at("0x4d78d671d4abbaf092c7b159ea24c2a95b79ae80")
+        this.state.ContractInstance = MyContract.at("0xc66978f8c8f421ef2f83dd5e1983a411efd85241")
     }
     componentDidMount() {
+        for (var i = 0; i < 6; i++) {
+            $('#root').append('<table> <tr> <th width="20%">B</th> <th width="20%">I</th> <th width="20%">N</th> <th width="20%">G</th> <th width="20%">O</th> </tr> <tr> <td id="square0">&nbsp;</td> <td id="square1">&nbsp;</td> <td id="square2">&nbsp;</td> <td id="square3">&nbsp;</td> <td id="square4">&nbsp;</td> </tr> <tr> <td id="square5">&nbsp;</td> <td id="square6">&nbsp;</td> <td id="square7">&nbsp;</td> <td id="square8">&nbsp;</td> <td id="square9">&nbsp;</td> </tr> <tr> <td id="square10">&nbsp;</td> <td id="square11">&nbsp;</td> <td id="free">Free</td> <td id="square12">&nbsp;</td> <td id="square13">&nbsp;</td> </tr> <tr> <td id="square14">&nbsp;</td> <td id="square15">&nbsp;</td> <td id="square16">&nbsp;</td> <td id="square17">&nbsp;</td> <td id="square18">&nbsp;</td> </tr> <tr> <td id="square19">&nbsp;</td> <td id="square20">&nbsp;</td> <td id="square21">&nbsp;</td> <td id="square22">&nbsp;</td> <td id="square23">&nbsp;</td> </tr> </table>')
+            this.anotherCard()
+        }
         this.anotherCard()
         this.newCard()
         this.updateState()
         this.setupListeners()
         setInterval(this.updateState.bind(this), 10e3)
+        
     }
 
-    initAll() {
-        if (document.getElementById) {
-            //document.getElementById("reload").onclick = this.anotherCard()
-            this.newCard()
-        }
-        else {
-            alert("Your browser does not support this script.");
-        }
-    }
 
     newCard() {
         for (var i = 0; i < 24; i++) {
@@ -227,6 +230,7 @@ class App extends React.Component {
 
         this.state.usedNums[newNum] = true;
         document.getElementById(currentSquare).innerHTML = newNum;
+        
      }
 
     getNewNum() {
@@ -250,10 +254,10 @@ class App extends React.Component {
                 })
             }
         })
-        this.state.ContractInstance.numberOfCards((err, result) => {
+        this.state.ContractInstance.allCardsCount((err, result) => {
             if (result != null) {
                 this.setState({
-                    numberOfCards: parseInt(result)
+                    allCardsCount: parseInt(result)
                 })
             }
         })
@@ -265,11 +269,47 @@ class App extends React.Component {
                 })
             }
         })
+
+
+
+        /*if (this.state.numberOfCards > 0) {
+            for (var i = 0; i < this.state.numberOfCards; i++) {
+                this.anotherCard();
+            }
+        }*/
     }
 
     // Listen for events and executes the voteNumber method
     setupListeners() {
-        
+        let liNodes = this.refs.button.querySelectorAll('li')
+        liNodes.forEach(number => {
+            number.addEventListener('click', event => {
+                this.buyCards(parseInt(event.target.innerHTML), done => {
+                    // Remove the other number selected
+                    for (let i = 0; i < liNodes.length; i++) {
+                        liNodes[i].className = ''
+                    }
+                })
+            })
+        })
+    }
+
+    buyCards(number, cb) {
+        let bet = this.refs['ether-bet'].value
+       
+        if (!bet) bet = 0
+        if (parseInt(bet) <= 0) {
+            alert('You must type how many card you want to take')
+        } else {
+            this.state.cardsCountForUser += bet;
+            this.state.ContractInstance.buy( {
+                gas: 300000,
+                from: web3.eth.accounts[0],
+                value: web3.toWei(bet, 'finney')
+            }, (err, result) => {
+                cb()
+            })
+        }
     }
     render() {
         return (
@@ -277,7 +317,11 @@ class App extends React.Component {
                 <h1>Buy as many cards as you want and win huge amounts of Ether</h1>
                 <div className="block">
                     <b>Number of cards:</b> &nbsp;
-               <span>{this.state.numberOfCards}</span>
+               <span>{this.state.allCardsCount}</span>
+                </div>
+                <div className="block">
+                    <b>You have</b> &nbsp;
+               <span>{this.state.cardsCountForUser} cards</span>
                 </div>
                 <div className="block">
                     <b>Last chosen number:</b> &nbsp;
@@ -291,59 +335,22 @@ class App extends React.Component {
                 <hr />
                 <h2>Wait for the next number</h2>
                 <label>
-                    <b>How much cards do you want to buy? <input className="bet-input" ref="ether-bet" type="number" placeholder={this.state.numberOfCards} /></b> ether
-               <br />
+                    <b>How much cards do you want to buy? <input className="bet-input" ref="ether-bet" type="number" placeholder={this.state.cardsCountForUser} /></b>
+               
                 </label>
-                
+
+                <ul ref="button">
+                    <li>Take</li>
+                </ul>
+                <br />
+
                 <h1>This is your Bingo Card</h1>
-                <table>
-                    <tr>
-                        <th width="20%">B</th>
-                        <th width="20%">I</th>
-                        <th width="20%">N</th>
-                        <th width="20%">G</th>
-                        <th width="20%">O</th>
-                    </tr>
-                    <tr>
-                        <td id="square0">&nbsp;</td>
-                        <td id="square1">&nbsp;</td>
-                        <td id="square2">&nbsp;</td>
-                        <td id="square3">&nbsp;</td>
-                        <td id="square4">&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td id="square5">&nbsp;</td>
-                        <td id="square6">&nbsp;</td>
-                        <td id="square7">&nbsp;</td>
-                        <td id="square8">&nbsp;</td>
-                        <td id="square9">&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td id="square10">&nbsp;</td>
-                        <td id="square11">&nbsp;</td>
-                        <td id="free">Free</td>
-                        <td id="square12">&nbsp;</td>
-                        <td id="square13">&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td id="square14">&nbsp;</td>
-                        <td id="square15">&nbsp;</td>
-                        <td id="square16">&nbsp;</td>
-                        <td id="square17">&nbsp;</td>
-                        <td id="square18">&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td id="square19">&nbsp;</td>
-                        <td id="square20">&nbsp;</td>
-                        <td id="square21">&nbsp;</td>
-                        <td id="square22">&nbsp;</td>
-                        <td id="square23">&nbsp;</td>
-                    </tr>
-                </table>
+               
             </div>
         )
     }
 }
+
 ReactDOM.render(
     <App />,
     document.querySelector('#root')
